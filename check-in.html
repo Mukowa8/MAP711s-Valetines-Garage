@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Vehicle check-in and service management system for Valentine's Garage">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔧</text></svg>">
+    <title>Vehicle Check-In - Valentine's Garage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Valentine's Garage</h1>
+            <p>Truck Check-In & Service Management System</p>
+        </header>
+
+        <nav>
+            <a class="nav-btn" href="index.html">Dashboard</a>
+            <a class="nav-btn active" href="check-in.html">Check-In</a>
+            <a class="nav-btn" href="vehicles.html">Vehicles</a>
+            <a class="nav-btn" href="services.html">Services</a>
+            <a class="nav-btn" href="employees.html">Employees</a>
+            <a class="nav-btn" href="reports.html">Reports</a>
+        </nav>
+
+        <div class="page-section">
+            <h2>🚛 Vehicle Check-In</h2>
+            <div class="success-message" id="checkinMessage"></div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="plateNumber">License Plate *</label>
+                    <input type="text" id="plateNumber" placeholder="e.g., ABC123">
+                </div>
+                <div class="form-group">
+                    <label for="checkInDate">Check-In Date *</label>
+                    <input type="date" id="checkInDate">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vehicleCondition">Vehicle Condition *</label>
+                    <select id="vehicleCondition">
+                        <option value="">Select Condition</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="kilometers">Kilometers Driven *</label>
+                    <input type="number" id="kilometers" placeholder="e.g., 15000" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="employeeName">Employee Name *</label>
+                    <input type="text" id="employeeName" placeholder="e.g., John Doe">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Initial Notes</label>
+                <textarea id="notes" placeholder="Describe vehicle condition and any visible issues..."></textarea>
+            </div>
+
+            <button onclick="checkInVehicle()">✓ Check-In Vehicle</button>
+
+            <h3 style="margin-top: 40px;">Recent Check-Ins</h3>
+            <div id="recentCheckins"></div>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        // Initialize with current date
+        document.getElementById('checkInDate').valueAsDate = new Date();
+
+        function checkInVehicle() {
+            const plate = document.getElementById('plateNumber').value.trim();
+            const condition = document.getElementById('vehicleCondition').value;
+            const km = parseInt(document.getElementById('kilometers').value);
+            const employee = document.getElementById('employeeName').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+
+            if (!plate || !condition || !km || !employee) {
+                alert('Please fill in all required fields (marked with *)');
+                return;
+            }
+
+            const vehicle = {
+                plateNumber: plate,
+                condition: condition,
+                kilometers: km,
+                checkInEmployee: employee,
+                notes: notes,
+                status: 'in-service'
+            };
+
+            garage.addVehicle(vehicle);
+
+            // Show success message
+            showSuccessMessage('checkinMessage', `✓ ${plate} checked in successfully!`);
+
+            // Clear form
+            document.getElementById('plateNumber').value = '';
+            document.getElementById('vehicleCondition').value = '';
+            document.getElementById('kilometers').value = '';
+            document.getElementById('employeeName').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('checkInDate').valueAsDate = new Date();
+
+            displayRecentCheckins();
+        }
+
+        function displayRecentCheckins() {
+            const container = document.getElementById('recentCheckins');
+            const recent = garage.vehicles.slice(-10).reverse();
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center;">No vehicles checked in yet</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License Plate</th>
+                            <th>Condition</th>
+                            <th>Kilometers</th>
+                            <th>Checked In By</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recent.map(v => `
+                            <tr>
+                                <td><strong>${v.plateNumber}</strong></td>
+                                <td>${getConditionBadge(v.condition)}</td>
+                                <td>${v.kilometers.toLocaleString()} km</td>
+                                <td>${v.checkInEmployee}</td>
+                                <td>${formatDate(v.checkedInDate)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Load recent check-ins on page load
+        window.addEventListener('load', displayRecentCheckins);
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
