@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Vehicle check-in and service management system for Valentine's Garage">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔧</text></svg>">
+    <title>Employees - Valentine's Garage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Valentine's Garage</h1>
+            <p>Truck Check-In & Service Management System</p>
+        </header>
+
+        <nav>
+            <a class="nav-btn" href="index.html">Dashboard</a>
+            <a class="nav-btn" href="check-in.html">Check-In</a>
+            <a class="nav-btn" href="vehicles.html">Vehicles</a>
+            <a class="nav-btn" href="services.html">Services</a>
+            <a class="nav-btn active" href="employees.html">Employees</a>
+            <a class="nav-btn" href="reports.html">Reports</a>
+        </nav>
+
+        <div class="page-section">
+            <h2>👥 Employee Management</h2>
+            
+            <div class="success-message" id="employeeMessage"></div>
+
+            <h3>Add New Employee</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="newEmployeeName">Employee Name *</label>
+                    <input type="text" id="newEmployeeName" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                    <label for="newEmployeeEmail">Email *</label>
+                    <input type="email" id="newEmployeeEmail" placeholder="employee@garage.com">
+                </div>
+                <div class="form-group">
+                    <label for="newEmployeeRole">Role *</label>
+                    <select id="newEmployeeRole">
+                        <option value="">Select Role</option>
+                        <option value="mechanic">Mechanic</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="addEmployee()">+ Add Employee</button>
+
+            <h3 style="margin-top: 30px;">Employee List</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Completed Tasks</th>
+                        <th>In Progress</th>
+                        <th>Total Tasks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        function addEmployee() {
+            const name = document.getElementById('newEmployeeName').value.trim();
+            const email = document.getElementById('newEmployeeEmail').value.trim();
+            const role = document.getElementById('newEmployeeRole').value;
+
+            if (!name || !email || !role) {
+                alert('Please fill in all fields (marked with *)');
+                return;
+            }
+
+            const employee = {
+                name: name,
+                email: email,
+                role: role
+            };
+
+            garage.addEmployee(employee);
+
+            // Show success message
+            showSuccessMessage('employeeMessage', `✓ ${name} added to the team!`);
+
+            // Clear form
+            document.getElementById('newEmployeeName').value = '';
+            document.getElementById('newEmployeeEmail').value = '';
+            document.getElementById('newEmployeeRole').value = '';
+
+            displayAllEmployees();
+        }
+
+        function displayAllEmployees() {
+            const table = document.getElementById('employeesTable');
+            
+            if (garage.employees.length === 0) {
+                table.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">No employees added yet</td></tr>';
+                return;
+            }
+
+            table.innerHTML = garage.employees.map(employee => {
+                const tasks = garage.getEmployeeTasks(employee.name);
+                const completed = tasks.filter(t => t.status === 'completed').length;
+                const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+                const total = tasks.length;
+
+                return `
+                    <tr>
+                        <td><strong>${employee.name}</strong></td>
+                        <td>${employee.email}</td>
+                        <td><span class="badge" style="background: #e3f2fd; color: #1976d2;">${employee.role}</span></td>
+                        <td>${completed}</td>
+                        <td>${inProgress}</td>
+                        <td>${total}</td>
+                        <td><button class="danger" onclick="deleteEmployeeRecord(${employee.id})">Delete</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteEmployeeRecord(employeeId) {
+            if (confirm('Are you sure you want to delete this employee? Associated tasks will not be deleted.')) {
+                const employee = garage.employees.find(e => e.id === employeeId);
+                garage.deleteEmployee(employeeId);
+                displayAllEmployees();
+                alert(`✓ ${employee.name} deleted!`);
+            }
+        }
+
+        // Load employees on page load
+        window.addEventListener('load', displayAllEmployees);
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
