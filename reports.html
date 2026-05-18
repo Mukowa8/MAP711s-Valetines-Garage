@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Vehicle check-in and service management system for Valentine's Garage">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔧</text></svg>">
+    <title>Reports - Valentine's Garage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Valentine's Garage</h1>
+            <p>Truck Check-In & Service Management System</p>
+        </header>
+
+        <nav>
+            <a class="nav-btn" href="index.html">Dashboard</a>
+            <a class="nav-btn" href="check-in.html">Check-In</a>
+            <a class="nav-btn" href="vehicles.html">Vehicles</a>
+            <a class="nav-btn" href="services.html">Services</a>
+            <a class="nav-btn" href="employees.html">Employees</a>
+            <a class="nav-btn active" href="reports.html">Reports</a>
+        </nav>
+
+        <div class="page-section">
+            <h2>📊 Reports & Analytics</h2>
+            
+            <!-- Vehicle Summary -->
+            <div class="report-section">
+                <h3>🚗 Vehicle Summary</h3>
+                <div id="vehicleSummary" class="grid"></div>
+            </div>
+
+            <!-- Vehicle Condition Report -->
+            <div class="report-section">
+                <h3>📋 Vehicle Condition Report</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License Plate</th>
+                            <th>Condition</th>
+                            <th>Check-In Date</th>
+                            <th>Kilometers</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conditionReportTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Employee Work Summary -->
+            <div class="report-section">
+                <h3>👥 Employee Work Summary</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Role</th>
+                            <th>Completed</th>
+                            <th>In Progress</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeReportTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Work Tasks Summary -->
+            <div class="report-section">
+                <h3>✓ Work Tasks Summary</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License Plate</th>
+                            <th>Employee</th>
+                            <th>Task Description</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workTasksReportTable"></tbody>
+                </table>
+            </div>
+
+            <!-- Condition Distribution -->
+            <div class="report-section">
+                <h3>📊 Condition Distribution</h3>
+                <div id="conditionDistribution" class="grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        function generateReports() {
+            generateVehicleSummary();
+            generateConditionReport();
+            generateEmployeeReport();
+            generateWorkTasksReport();
+            generateConditionDistribution();
+        }
+
+        function generateVehicleSummary() {
+            const container = document.getElementById('vehicleSummary');
+            const totalVehicles = garage.vehicles.length;
+            const inService = garage.vehicles.filter(v => v.status === 'in-service').length;
+            const completed = garage.vehicles.filter(v => v.status === 'completed').length;
+
+            container.innerHTML = `
+                <div class="card">
+                    <h4>Total Vehicles</h4>
+                    <p style="font-size: 2.5em; color: #667eea; font-weight: bold;">${totalVehicles}</p>
+                </div>
+                <div class="card">
+                    <h4>In Service</h4>
+                    <p style="font-size: 2.5em; color: #f57c00; font-weight: bold;">${inService}</p>
+                </div>
+                <div class="card">
+                    <h4>Completed</h4>
+                    <p style="font-size: 2.5em; color: #388e3c; font-weight: bold;">${completed}</p>
+                </div>
+            `;
+        }
+
+        function generateConditionReport() {
+            const table = document.getElementById('conditionReportTable');
+            
+            if (garage.vehicles.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">No vehicle data</td></tr>';
+                return;
+            }
+
+            table.innerHTML = garage.vehicles.map(vehicle => `
+                <tr>
+                    <td><strong>${vehicle.plateNumber}</strong></td>
+                    <td>${getConditionBadge(vehicle.condition)}</td>
+                    <td>${formatDate(vehicle.checkedInDate)}</td>
+                    <td>${vehicle.kilometers.toLocaleString()} km</td>
+                    <td>${getStatusBadge(vehicle.status)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function generateEmployeeReport() {
+            const table = document.getElementById('employeeReportTable');
+            
+            if (garage.employees.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">No employee data</td></tr>';
+                return;
+            }
+
+            table.innerHTML = garage.employees.map(employee => {
+                const tasks = garage.getEmployeeTasks(employee.name);
+                const completed = tasks.filter(t => t.status === 'completed').length;
+                const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+
+                return `
+                    <tr>
+                        <td><strong>${employee.name}</strong></td>
+                        <td>${employee.role}</td>
+                        <td>${completed}</td>
+                        <td>${inProgress}</td>
+                        <td>${tasks.length}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function generateWorkTasksReport() {
+            const table = document.getElementById('workTasksReportTable');
+            
+            if (garage.workTasks.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">No work tasks yet</td></tr>';
+                return;
+            }
+
+            table.innerHTML = garage.workTasks.map(task => {
+                const vehicle = garage.vehicles.find(v => v.id === task.vehicleId);
+                return `
+                    <tr>
+                        <td><strong>${vehicle ? vehicle.plateNumber : 'Unknown'}</strong></td>
+                        <td>${task.employeeName}</td>
+                        <td>${task.description}</td>
+                        <td>${getStatusBadge(task.status)}</td>
+                        <td>${formatDate(task.createdDate)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function generateConditionDistribution() {
+            const container = document.getElementById('conditionDistribution');
+            
+            const good = garage.vehicles.filter(v => v.condition === 'good').length;
+            const fair = garage.vehicles.filter(v => v.condition === 'fair').length;
+            const poor = garage.vehicles.filter(v => v.condition === 'poor').length;
+            const total = garage.vehicles.length;
+
+            if (total === 0) {
+                container.innerHTML = '<p style="color: #999;">No vehicle data to display</p>';
+                return;
+            }
+
+            const goodPercent = ((good / total) * 100).toFixed(1);
+            const fairPercent = ((fair / total) * 100).toFixed(1);
+            const poorPercent = ((poor / total) * 100).toFixed(1);
+
+            container.innerHTML = `
+                <div class="card">
+                    <h4>Good Condition</h4>
+                    <p style="font-size: 2.5em; color: #27ae60; font-weight: bold;">${good}</p>
+                    <p style="color: #666;">${goodPercent}% of total</p>
+                </div>
+                <div class="card">
+                    <h4>Fair Condition</h4>
+                    <p style="font-size: 2.5em; color: #f39c12; font-weight: bold;">${fair}</p>
+                    <p style="color: #666;">${fairPercent}% of total</p>
+                </div>
+                <div class="card">
+                    <h4>Poor Condition</h4>
+                    <p style="font-size: 2.5em; color: #e74c3c; font-weight: bold;">${poor}</p>
+                    <p style="color: #666;">${poorPercent}% of total</p>
+                </div>
+            `;
+        }
+
+        // Generate reports on page load
+        window.addEventListener('load', generateReports);
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
