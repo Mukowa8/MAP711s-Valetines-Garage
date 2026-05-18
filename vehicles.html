@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Vehicle check-in and service management system for Valentine's Garage">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔧</text></svg>">
+    <title>Vehicles - Valentine's Garage</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Valentine's Garage</h1>
+            <p>Truck Check-In & Service Management System</p>
+        </header>
+
+        <nav>
+            <a class="nav-btn" href="index.html">Dashboard</a>
+            <a class="nav-btn" href="check-in.html">Check-In</a>
+            <a class="nav-btn active" href="vehicles.html">Vehicles</a>
+            <a class="nav-btn" href="services.html">Services</a>
+            <a class="nav-btn" href="employees.html">Employees</a>
+            <a class="nav-btn" href="reports.html">Reports</a>
+        </nav>
+
+        <div class="page-section">
+            <h2>🚗 All Vehicles</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="filterStatus">Filter by Status:</label>
+                <select id="filterStatus" onchange="loadVehicles()" style="width: 100%; max-width: 300px; padding: 10px; margin-top: 8px;">
+                    <option value="">All Vehicles</option>
+                    <option value="in-service">In Service</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+
+            <div id="vehiclesContainer" class="grid"></div>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        function loadVehicles() {
+            const filterStatus = document.getElementById('filterStatus').value;
+            const container = document.getElementById('vehiclesContainer');
+            
+            let vehicles = garage.vehicles;
+            if (filterStatus) {
+                vehicles = vehicles.filter(v => v.status === filterStatus);
+            }
+
+            if (vehicles.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No vehicles found</h3></div>';
+                return;
+            }
+
+            container.innerHTML = vehicles.map(vehicle => `
+                <div class="card">
+                    <h3>${vehicle.plateNumber}</h3>
+                    <p><strong>Condition:</strong> ${getConditionBadge(vehicle.condition)}</p>
+                    <p><strong>Kilometers:</strong> ${vehicle.kilometers.toLocaleString()} km</p>
+                    <p><strong>Checked In By:</strong> ${vehicle.checkInEmployee}</p>
+                    <p><strong>Status:</strong> ${getStatusBadge(vehicle.status)}</p>
+                    <p><strong>Notes:</strong> ${vehicle.notes || 'No notes'}</p>
+                    <p style="font-size: 0.9em; color: #999;">Checked in: ${formatDate(vehicle.checkedInDate)}</p>
+                    <div class="action-buttons">
+                        <button onclick="completeVehicleService(${vehicle.id})">Complete Service</button>
+                        <button class="danger" onclick="deleteVehicleRecord(${vehicle.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function completeVehicleService(vehicleId) {
+            const vehicle = garage.vehicles.find(v => v.id === vehicleId);
+            if (vehicle) {
+                vehicle.status = 'completed';
+                garage.saveData('vehicles', garage.vehicles);
+                loadVehicles();
+                alert(`✓ ${vehicle.plateNumber} service completed!`);
+            }
+        }
+
+        function deleteVehicleRecord(vehicleId) {
+            if (confirm('Are you sure you want to delete this vehicle record?')) {
+                const vehicle = garage.vehicles.find(v => v.id === vehicleId);
+                garage.deleteVehicle(vehicleId);
+                loadVehicles();
+                alert(`✓ ${vehicle.plateNumber} deleted!`);
+            }
+        }
+
+        // Load vehicles on page load
+        window.addEventListener('load', loadVehicles);
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
