@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Vehicle check-in and service management system for Valentine's Garage">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>🔧</text></svg>">
+    <title>Valentine's Garage - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Valentine's Garage</h1>
+            <p>Truck Check-In & Service Management System</p>
+        </header>
+
+        <nav>
+            <a class="nav-btn active" href="index.html">Dashboard</a>
+            <a class="nav-btn" href="check-in.html">Check-In</a>
+            <a class="nav-btn" href="vehicles.html">Vehicles</a>
+            <a class="nav-btn" href="services.html">Services</a>
+            <a class="nav-btn" href="employees.html">Employees</a>
+            <a class="nav-btn" href="reports.html">Reports</a>
+        </nav>
+
+        <div class="page-section">
+            <h2>📊 Dashboard</h2>
+            <p style="font-size: 1.1em; color: #666; margin-bottom: 30px;">Welcome to Valentine's Garage Truck Check-In System</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>🚛 Quick Stats</h3>
+                    <p><strong>Total Vehicles:</strong> <span id="totalVehicles">0</span></p>
+                    <p><strong>In Service:</strong> <span id="inServiceCount">0</span></p>
+                    <p><strong>Completed:</strong> <span id="completedCount">0</span></p>
+                </div>
+                
+                <div class="card">
+                    <h3>👥 Team</h3>
+                    <p><strong>Total Employees:</strong> <span id="totalEmployees">0</span></p>
+                    <p><strong>Active Tasks:</strong> <span id="activeTasks">0</span></p>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Overview</h3>
+                    <p><strong>Work Tasks:</strong> <span id="totalTasks">0</span></p>
+                    <p><strong>Completed Tasks:</strong> <span id="completedTasks">0</span></p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 40px;">Recent Vehicles</h3>
+            <div id="recentVehicles"></div>
+
+            <h3 style="margin-top: 40px;">Navigation</h3>
+            <div class="grid">
+                <a href="check-in.html" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer; text-align: center;">
+                        <h4 style="font-size: 2em; margin-bottom: 10px;">🚛</h4>
+                        <h4>Check-In New Vehicle</h4>
+                        <p>Register trucks and capture vehicle condition</p>
+                    </div>
+                </a>
+
+                <a href="vehicles.html" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer; text-align: center;">
+                        <h4 style="font-size: 2em; margin-bottom: 10px;">🚗</h4>
+                        <h4>View All Vehicles</h4>
+                        <p>Browse and manage all checked-in vehicles</p>
+                    </div>
+                </a>
+
+                <a href="services.html" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer; text-align: center;">
+                        <h4 style="font-size: 2em; margin-bottom: 10px;">🔨</h4>
+                        <h4>Services & Notes</h4>
+                        <p>Track work and collaborate with team</p>
+                    </div>
+                </a>
+
+                <a href="employees.html" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer; text-align: center;">
+                        <h4 style="font-size: 2em; margin-bottom: 10px;">👥</h4>
+                        <h4>Manage Employees</h4>
+                        <p>View team members and their tasks</p>
+                    </div>
+                </a>
+
+                <a href="reports.html" style="text-decoration: none;">
+                    <div class="card" style="cursor: pointer; text-align: center;">
+                        <h4 style="font-size: 2em; margin-bottom: 10px;">📊</h4>
+                        <h4>View Reports</h4>
+                        <p>Analytics and performance metrics</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script>
+        function loadDashboard() {
+            // Update statistics
+            document.getElementById('totalVehicles').textContent = garage.vehicles.length;
+            document.getElementById('inServiceCount').textContent = garage.vehicles.filter(v => v.status === 'in-service').length;
+            document.getElementById('completedCount').textContent = garage.vehicles.filter(v => v.status === 'completed').length;
+            
+            document.getElementById('totalEmployees').textContent = garage.employees.length;
+            document.getElementById('totalTasks').textContent = garage.workTasks.length;
+            document.getElementById('completedTasks').textContent = garage.workTasks.filter(t => t.status === 'completed').length;
+
+            const activeTasks = garage.workTasks.filter(t => t.status === 'in-progress').length;
+            document.getElementById('activeTasks').textContent = activeTasks;
+
+            // Display recent vehicles
+            displayRecentVehicles();
+        }
+
+        function displayRecentVehicles() {
+            const container = document.getElementById('recentVehicles');
+            const recent = garage.vehicles.slice(-5).reverse();
+
+            if (recent.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center;">No vehicles checked in yet</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>License Plate</th>
+                            <th>Condition</th>
+                            <th>Check-In Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recent.map(v => `
+                            <tr>
+                                <td><strong>${v.plateNumber}</strong></td>
+                                <td>${getConditionBadge(v.condition)}</td>
+                                <td>${formatDate(v.checkedInDate)}</td>
+                                <td>${getStatusBadge(v.status)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Load dashboard on page load
+        window.addEventListener('load', loadDashboard);
+    </script>
+
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
