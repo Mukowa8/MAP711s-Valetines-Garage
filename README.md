@@ -298,15 +298,6 @@ Repository:
 ```text
 https://github.com/Mukowa8/MAP711s-Valetines-Garage
 ```
-
----
-
-## Author
-
-**Student:** Daniel Barnabas  
-**Project:** Valentine Garage Mobile App  
-**Assignment:** Mobile Application Development / MAP711s  
-
 ---
 
 ## Conclusion
